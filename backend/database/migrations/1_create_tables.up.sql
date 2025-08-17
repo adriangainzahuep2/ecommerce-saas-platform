@@ -1,9 +1,3 @@
--- migrate:up version:1
-
--- Enable pgvector extension
-CREATE EXTENSION IF NOT EXISTS vector;
-
--- Categories table
 CREATE TABLE categories (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -15,7 +9,6 @@ CREATE TABLE categories (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Products table
 CREATE TABLE products (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -34,12 +27,10 @@ CREATE TABLE products (
   expiration_date DATE,
   images JSONB,
   tags TEXT[],
-  embedding vector(1536),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Combo products relationship
 CREATE TABLE combo_products (
   id BIGSERIAL PRIMARY KEY,
   combo_id BIGINT REFERENCES products(id),
@@ -48,7 +39,6 @@ CREATE TABLE combo_products (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Customers table
 CREATE TABLE customers (
   id BIGSERIAL PRIMARY KEY,
   whatsapp_number VARCHAR(20) UNIQUE,
@@ -63,7 +53,6 @@ CREATE TABLE customers (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Orders table
 CREATE TABLE orders (
   id BIGSERIAL PRIMARY KEY,
   customer_id BIGINT REFERENCES customers(id),
@@ -82,7 +71,6 @@ CREATE TABLE orders (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Order items table
 CREATE TABLE order_items (
   id BIGSERIAL PRIMARY KEY,
   order_id BIGINT REFERENCES orders(id),
@@ -93,7 +81,6 @@ CREATE TABLE order_items (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- WhatsApp messages table
 CREATE TABLE whatsapp_messages (
   id BIGSERIAL PRIMARY KEY,
   customer_id BIGINT REFERENCES customers(id),
@@ -107,7 +94,6 @@ CREATE TABLE whatsapp_messages (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Purchase requests table
 CREATE TABLE purchase_requests (
   id BIGSERIAL PRIMARY KEY,
   request_id VARCHAR(100) UNIQUE NOT NULL,
@@ -119,7 +105,6 @@ CREATE TABLE purchase_requests (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Invoices table
 CREATE TABLE invoices (
   id BIGSERIAL PRIMARY KEY,
   order_id BIGINT REFERENCES orders(id),
@@ -130,39 +115,35 @@ CREATE TABLE invoices (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Inventory movements table
 CREATE TABLE inventory_movements (
   id BIGSERIAL PRIMARY KEY,
   product_id BIGINT REFERENCES products(id),
-  movement_type VARCHAR(50) NOT NULL, -- 'in', 'out', 'adjustment'
+  movement_type VARCHAR(50) NOT NULL,
   quantity INTEGER NOT NULL,
-  reference_id BIGINT, -- order_id or other reference
-  reference_type VARCHAR(50), -- 'order', 'adjustment', 'return'
+  reference_id BIGINT,
+  reference_type VARCHAR(50),
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Customer interactions table for recommendations
 CREATE TABLE customer_interactions (
   id BIGSERIAL PRIMARY KEY,
   customer_id BIGINT REFERENCES customers(id),
   product_id BIGINT REFERENCES products(id),
-  interaction_type VARCHAR(50), -- 'view', 'click', 'purchase', 'cart_add'
+  interaction_type VARCHAR(50),
   duration_seconds INTEGER,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Recommendations table
 CREATE TABLE recommendations (
   id BIGSERIAL PRIMARY KEY,
   customer_id BIGINT REFERENCES customers(id),
   product_id BIGINT REFERENCES products(id),
   score DOUBLE PRECISION,
-  algorithm VARCHAR(50), -- 'collaborative', 'content_based', 'tiktok_style'
+  algorithm VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Business units table
 CREATE TABLE business_units (
   id BIGSERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -171,7 +152,6 @@ CREATE TABLE business_units (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Payments table
 CREATE TABLE payments (
   id BIGSERIAL PRIMARY KEY,
   order_id BIGINT REFERENCES orders(id),
@@ -183,9 +163,7 @@ CREATE TABLE payments (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create indexes for better performance
 CREATE INDEX idx_products_category ON products(category_id);
-CREATE INDEX idx_products_embedding ON products USING ivfflat (embedding vector_cosine_ops);
 CREATE INDEX idx_orders_customer ON orders(customer_id);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_customer_interactions_customer ON customer_interactions(customer_id);
